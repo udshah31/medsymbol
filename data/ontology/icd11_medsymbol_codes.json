@@ -1,0 +1,12 @@
+{
+  "CA40": "Community-acquired pneumonia",
+  "CA40.0": "Viral pneumonia",
+  "CA40.1": "Bacterial pneumonia",
+  "BB01": "Malignant neoplasms of bronchus or lung",
+  "BD1": "Chronic obstructive pulmonary disease",
+  "CA20": "Acute bronchitis",
+  "CB21": "Asthma",
+  "BA00": "Heart failure",
+  "BC40": "Cardiomegaly",
+  "KB20": "Pleural effusion"
+}
