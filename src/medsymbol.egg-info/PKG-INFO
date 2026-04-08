@@ -1,0 +1,29 @@
+Metadata-Version: 2.4
+Name: medsymbol
+Version: 0.1.0
+Summary: MedSymbol: A Neuro-Symbolic Framework for Verifiably Consistent Medical Diagnosis
+License: MIT
+Requires-Python: >=3.10
+Requires-Dist: torch>=2.0
+Requires-Dist: torchvision>=0.15
+Requires-Dist: transformers>=4.30
+Requires-Dist: pytorch-tabnet>=4.0
+Requires-Dist: pydicom>=2.4
+Requires-Dist: Pillow>=10.0
+Requires-Dist: owlready2>=0.40
+Requires-Dist: z3-solver>=4.12
+Requires-Dist: numpy>=1.24
+Requires-Dist: pandas>=2.0
+Requires-Dist: scipy>=1.10
+Requires-Dist: scikit-learn>=1.3
+Requires-Dist: matplotlib>=3.7
+Requires-Dist: seaborn>=0.12
+Requires-Dist: wandb>=0.15
+Requires-Dist: tqdm>=4.65
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: rich>=13.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: ruff>=0.1; extra == "dev"
+Requires-Dist: ipykernel>=6.0; extra == "dev"

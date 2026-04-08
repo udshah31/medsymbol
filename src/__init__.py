@@ -1,3 +1,3 @@
-"""MedSymbol: A Neuro-Symbolic Framework for Verifiably Consistent Medical Diagnosis."""
+from .model import MedSymbolModel
 
-__version__ = "0.1.0"
+__all__ = ["MedSymbolModel"]

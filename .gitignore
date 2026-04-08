@@ -1,47 +1,26 @@
-# Data (large files - never commit)
-data/raw/
-data/processed/
-*.dcm
-*.dicom
-*.nii
-*.nii.gz
+# Environments
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-*.egg-info/
-dist/
-build/
-.eggs/
 
-# Environments
-.venv/
-venv/
-env/
-*.env
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Experiment artifacts (track selectively)
-experiments/*/checkpoints/
-experiments/*/wandb/
+# PyTorch/Experiments
+experiments/
 *.pt
 *.pth
-*.ckpt
 
-# But DO track configs and results
-!experiments/*/config.yaml
-!experiments/*/results.json
+# Dataset
+data/raw/
+data/processed/
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
