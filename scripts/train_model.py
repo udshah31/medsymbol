@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torch.amp import autocast, GradScaler
 from tqdm import tqdm
 
 # Add parent directory to path for imports
@@ -38,6 +39,16 @@ def train(args):
     # Setup Device
     device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
     print(f"[*] Using device: {device}")
+    
+    # Use mixed precision on CUDA for memory efficiency
+    use_amp = device.type == 'cuda'
+    scaler = GradScaler() if use_amp else None
+    if use_amp:
+        print(f"[*] Using Automatic Mixed Precision (AMP) for memory efficiency")
+    
+    # Clear CUDA cache before starting
+    if device.type == 'cuda':
+        torch.cuda.empty_cache()
 
     # Dataset & DataLoader
     csv_file = "data/raw/nih_cxr14/Data_Entry_2017.csv"
@@ -65,32 +76,61 @@ def train(args):
 
     # Training Loop
     print("[*] Starting Training...")
+    accumulation_steps = args.gradient_accumulation_steps
+    
     for epoch in range(args.epochs):
         model.train()
         running_loss = 0.0
         
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{args.epochs}")
-        for inputs, labels, patient_metadata in pbar:
+        optimizer.zero_grad()
+        
+        for step, (inputs, labels, patient_metadata) in enumerate(pbar):
             # Move inputs to device
             inputs_device = {k: v.to(device) for k, v in inputs.items()}
             labels_device = labels.to(device)
 
-            # Forward
-            optimizer.zero_grad()
-            logits = model(inputs_device) # Differentiable block (Modules 1-3)
-            
-            # Loss & Backward
-            loss = criterion(logits, labels_device)
-            loss.backward()
-            optimizer.step()
+            # Forward with mixed precision if using CUDA
+            if use_amp:
+                with autocast(device_type='cuda'):
+                    logits = model(inputs_device) 
+                    loss = criterion(logits, labels_device)
+                    loss = loss / accumulation_steps  # Scale for gradient accumulation
+                
+                scaler.scale(loss).backward()
+            else:
+                logits = model(inputs_device) 
+                loss = criterion(logits, labels_device)
+                loss = loss / accumulation_steps
+                loss.backward()
 
-            running_loss += loss.item()
-            pbar.set_postfix({'loss': running_loss / (pbar.n + 1)})
+            # Gradient accumulation
+            if (step + 1) % accumulation_steps == 0:
+                if use_amp:
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    optimizer.step()
+                optimizer.zero_grad()
+            
+            running_loss += loss.item() * accumulation_steps  # Undo scaling for reporting
+            pbar.set_postfix({'loss': running_loss / ((step + 1) * accumulation_steps)})
+        
+        # Final step if there's a remainder
+        if (len(train_loader)) % accumulation_steps != 0:
+            if use_amp:
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                optimizer.step()
+            optimizer.zero_grad()
 
         avg_loss = running_loss / len(train_loader)
         print(f"Epoch {epoch+1} | Average Loss: {avg_loss:.4f}")
 
-        # Optional: Run validation and log metrics here
+        # Clear CUDA cache after epoch
+        if device.type == 'cuda':
+            torch.cuda.empty_cache()
         
         # Save Checkpoint
         os.makedirs("experiments", exist_ok=True)
@@ -102,6 +142,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=16, help='Training batch size')
     parser.add_argument('--epochs', type=int, default=5, help='Number of epochs')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
+    parser.add_argument('--gradient_accumulation_steps', type=int, default=1, help='Gradient accumulation steps for memory efficiency')
     
     args = parser.parse_args()
     train(args)
