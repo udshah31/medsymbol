@@ -1,8 +1,27 @@
+import os
+import sys
 import torch
 import argparse
+from torch.utils.data import DataLoader
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.model import MedSymbolModel
 from src.utils.data_loader import NIHCXR14Dataset
-from torch.utils.data import DataLoader
+
+# Define collate_fn at module level to make it picklable
+def collate_fn(batch):
+    inputs_list, labels_list, patient_data_list = zip(*batch)
+    batched_inputs = {
+        'vision': torch.stack([x['vision'] for x in inputs_list]),
+        'history': torch.stack([x['history'] for x in inputs_list]),
+        'input_ids': torch.stack([x['input_ids'] for x in inputs_list]),
+        'attention_mask': torch.stack([x['attention_mask'] for x in inputs_list]),
+        'tabular': torch.stack([x['tabular'] for x in inputs_list]),
+    }
+    batched_labels = torch.stack(labels_list)
+    return batched_inputs, batched_labels, patient_data_list
 
 def inference(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
@@ -14,19 +33,7 @@ def inference(args):
     
     dataset = NIHCXR14Dataset(csv_file=csv_file, img_dir=img_dir, split='val')
     
-    def collate_fn(batch):
-        inputs_list, labels_list, patient_data_list = zip(*batch)
-        batched_inputs = {
-            'vision': torch.stack([x['vision'] for x in inputs_list]),
-            'history': torch.stack([x['history'] for x in inputs_list]),
-            'input_ids': torch.stack([x['input_ids'] for x in inputs_list]),
-            'attention_mask': torch.stack([x['attention_mask'] for x in inputs_list]),
-            'tabular': torch.stack([x['tabular'] for x in inputs_list]),
-        }
-        batched_labels = torch.stack(labels_list)
-        return batched_inputs, batched_labels, patient_data_list
-
-    val_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, collate_fn=collate_fn)
+    val_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, collate_fn=collate_fn, num_workers=0)
 
     # Initialize Model
     model = MedSymbolModel(
