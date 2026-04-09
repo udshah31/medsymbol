@@ -56,7 +56,8 @@ def train(args):
         tabular_input_dim=10, 
         history_input_dim=5,
         tau_low=0.3,
-        tau_high=1.5
+        tau_high=1.5,
+        pretrained=not args.no_pretrained
     ).to(device)
 
     # Optimizer & Loss for Multilabel classification
@@ -102,6 +103,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=16, help='Training batch size')
     parser.add_argument('--epochs', type=int, default=5, help='Number of epochs')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
+    parser.add_argument('--no_pretrained', action='store_true', help='Use randomly initialised weights instead of pretrained (useful for offline/smoke tests)')
     
     args = parser.parse_args()
     train(args)

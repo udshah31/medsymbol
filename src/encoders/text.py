@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from transformers import AutoModel, AutoConfig
+from transformers import AutoModel, BertConfig, BertModel
 
 class TextEncoder(nn.Module):
     """
@@ -16,8 +16,9 @@ class TextEncoder(nn.Module):
         if pretrained:
             self.bert = AutoModel.from_pretrained(model_name)
         else:
-            config = AutoConfig.from_pretrained(model_name)
-            self.bert = AutoModel.from_config(config)
+            # Use a standard BERT-base config locally (no network required)
+            config = BertConfig()
+            self.bert = BertModel(config)
             
         self.output_dim = output_dim
         

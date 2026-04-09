@@ -16,12 +16,13 @@ class MedSymbolModel(nn.Module):
                  tabular_input_dim: int, 
                  history_input_dim: int,
                  tau_low: float = 0.3,
-                 tau_high: float = 1.5):
+                 tau_high: float = 1.5,
+                 pretrained: bool = True):
         super().__init__()
         
         # Module 1: Multimodal Encoders & Fusion
-        self.vision_encoder = VisionEncoder()
-        self.text_encoder = TextEncoder()
+        self.vision_encoder = VisionEncoder(pretrained=pretrained)
+        self.text_encoder = TextEncoder(pretrained=pretrained)
         self.tabular_encoder = TabularEncoder(input_dim=tabular_input_dim)
         self.history_encoder = HistoryEncoder(input_dim=history_input_dim)
         self.fusion = MultimodalFusion()
