@@ -82,6 +82,7 @@ def download_file(url: str, dest: Path, desc: str = "", skip_existing: bool = Tr
                 BarColumn(),
                 DownloadColumn(),
                 TransferSpeedColumn(),
+                transient=True
             ) as progress:
                 task = progress.add_task("download", total=total if total > 0 else None)
                 with open(dest, "wb") as f:
@@ -119,6 +120,7 @@ def extract_tar_gz(filepath: Path, extract_dir: Path, desc: str = ""):
                 SpinnerColumn(),
                 TextColumn(f"[cyan]{desc or 'Extracting'}[/cyan]"),
                 BarColumn(),
+                transient=True
             ) as progress:
                 task = progress.add_task("extract", total=len(members))
                 for member in tar.getmembers():

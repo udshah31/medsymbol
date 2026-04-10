@@ -82,24 +82,23 @@ class PipelineOrchestrator:
                 SpinnerColumn(),
                 TextColumn(f"[cyan]{desc}[/cyan]"),
                 BarColumn(),
+                transient=True
             ) as progress:
                 task = progress.add_task("working", total=None)
                 
                 result = subprocess.run(
                     cmd,
                     cwd=str(self.project_dir),
-                    capture_output=True,
+                    capture_output=False,  # Show output directly
                     text=True,
                     timeout=3600
                 )
-                
-                progress.complete_task(task)
             
             if result.returncode == 0:
                 self.log(f"Command succeeded: {desc}", "SUCCESS")
                 return True
             else:
-                self.log(f"Command failed: {result.stderr[:500]}", "ERROR")
+                self.log(f"Command failed with exit code {result.returncode}", "ERROR")
                 return False
         
         except subprocess.TimeoutExpired:
