@@ -301,6 +301,8 @@ def main():
                         help='Output directory for results')
     parser.add_argument('--device', type=str, default='cuda',
                         help='Device to use (cuda/cpu)')
+    parser.add_argument('--wandb', action='store_true',
+                        help='Enable Weights & Biases logging')
     parser.add_argument('--wandb_project', type=str, default='medsymbol',
                         help='W&B project name')
     
@@ -317,8 +319,8 @@ def main():
         device = 'cpu'
         print(f"[*] Using CPU device")
     
-    # Initialize W&B if available
-    if HAS_WANDB:
+    # Initialize W&B if available and enabled
+    if args.wandb and HAS_WANDB:
         try:
             wandb.init(project=args.wandb_project, 
                       name="medsymbol-evaluation",

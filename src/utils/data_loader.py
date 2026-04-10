@@ -41,6 +41,7 @@ class NIHCXR14Dataset(Dataset):
         self.img_dir = img_dir
         self.split = split
         self.seed = seed
+        self.transform = transform
         
         # Load CSV
         if os.path.exists(csv_file):
