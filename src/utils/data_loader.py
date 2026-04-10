@@ -97,13 +97,14 @@ class NIHCXR14Dataset(Dataset):
         
         self.df = pd.concat(splits, ignore_index=True) if splits else self.df
 
-        self.transform = transform or transforms.Compose([
-            transforms.Resize((224, 224)),
-            # Repeat grayscale to 3 channels for ViT
-            transforms.Grayscale(num_output_channels=3), 
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        if self.transform is None:
+            self.transform = transforms.Compose([
+                transforms.Resize((224, 224)),
+                # Repeat grayscale to 3 channels for ViT
+                transforms.Grayscale(num_output_channels=3), 
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
 
     def __len__(self):
         return len(self.df)

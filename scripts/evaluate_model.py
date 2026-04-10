@@ -333,14 +333,22 @@ def main():
     print(f"\n[*] Loading model from {args.model_path}")
     if os.path.exists(args.model_path):
         checkpoint = torch.load(args.model_path, map_location=device)
-        model = MedSymbolModel()
+        model = MedSymbolModel(
+            num_diagnoses=14, 
+            tabular_input_dim=10, 
+            history_input_dim=5
+        )
         model.load_state_dict(checkpoint)
         model.to(device)
         print("[✓] Model loaded successfully")
     else:
         print(f"[!] Model not found at {args.model_path}")
         print("[*] Using randomly initialized model for demonstration")
-        model = MedSymbolModel()
+        model = MedSymbolModel(
+            num_diagnoses=14, 
+            tabular_input_dim=10, 
+            history_input_dim=5
+        )
         model.to(device)
     
     # Create test dataset
