@@ -162,3 +162,67 @@ class SymbolicVerifier:
         Returns True if all checks passed.
         """
         return all(res == "PASS" for res in verification_results.values())
+    
+    def verify_with_risk_stratification(self, diagnosis: str, patient_data: dict,
+                                        lab_values: dict = None, symptoms: list = None,
+                                        other_diagnoses: list = None) -> dict:
+        """
+        Enhanced verification with risk stratification and confidence scores.
+        
+        Returns: Extended results with:
+        - All 5 verification checks (PASS/FAIL)
+        - Risk stratification (low/intermediate/high)
+        - Confidence score (0-1)
+        - Detailed explanations
+        """
+        # Run standard 5 checks
+        results = self.verify_patient(diagnosis, patient_data, lab_values, symptoms, other_diagnoses)
+        
+        # Add sex-based check
+        sex = patient_data.get("sex")
+        if sex:
+            if self.constraints.check_sex_constraint(diagnosis, sex):
+                results["sex_consistency"] = "PASS"
+            else:
+                results["sex_consistency"] = "WARN"  # Warning, not fail
+        
+        # Add comorbidity risk scoring
+        comorbidities = patient_data.get("comorbidities", [])
+        age = patient_data.get("age")
+        comorbidity_multiplier = self.constraints.calculate_comorbidity_risk(
+            diagnosis, comorbidities, age
+        )
+        results["comorbidity_risk_multiplier"] = comorbidity_multiplier
+        
+        # Add symptom matching details
+        if symptoms:
+            sym_compatible, sym_score = self.constraints.match_symptoms(diagnosis, symptoms)
+            results["symptom_match_score"] = sym_score
+            results["symptom_compatible"] = sym_compatible
+        
+        # Add advanced lab checking
+        if lab_values:
+            lab_pass, lab_details = self.constraints.check_lab_consistency_advanced(
+                diagnosis, lab_values
+            )
+            results["lab_details"] = lab_details
+        
+        # Risk stratification
+        results["risk_stratification"] = self.constraints.get_risk_stratification(
+            diagnosis, patient_data
+        )
+        
+        # Calculate overall confidence (0-1)
+        pass_count = sum(1 for v in results.values() 
+                        if isinstance(v, str) and v == "PASS")
+        check_count = sum(1 for v in results.values() 
+                         if isinstance(v, str) and v in ["PASS", "FAIL", "WARN"])
+        
+        if check_count > 0:
+            results["confidence_score"] = pass_count / check_count
+        else:
+            results["confidence_score"] = 0.5
+        
+        results["fully_consistent"] = self.is_fully_consistent(results)
+        
+        return results
