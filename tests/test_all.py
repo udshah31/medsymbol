@@ -40,7 +40,7 @@ class TestVisionEncoder:
         
         features = encoder(dummy_images)
         
-        assert features.shape == (batch_size, 512), f"Expected shape (4, 512), got {features.shape}"
+        assert features.shape == (batch_size, 768), f"Expected shape (4, 768), got {features.shape}"
     
     def test_vision_encoder_cuda_support(self):
         """Test vision encoder works on GPU if available."""
@@ -61,7 +61,7 @@ class TestVisionEncoder:
         for batch_size in [1, 2, 8, 16, 32]:
             dummy_images = torch.randn(batch_size, 3, 224, 224)
             features = encoder(dummy_images)
-            assert features.shape == (batch_size, 512)
+            assert features.shape == (batch_size, 768)
 
 
 # ============================================================================
@@ -318,13 +318,13 @@ class TestMedSymbolModel:
         )
         model.eval()
         
-        # Create dummy inputs
+        # Create dummy inputs using correct keys for forward method
         sample_input = {
-            'image': torch.randn(2, 3, 224, 224),
-            'text_embedding': torch.randn(2, 768),
-            'tabular_features': torch.randn(2, 10),
-            'history_sequence': torch.randn(2, 5, 128),
-            'patient_age': torch.tensor([30.0, 50.0], dtype=torch.float32)
+            'vision': torch.randn(2, 3, 224, 224),
+            'input_ids': torch.randint(0, 1000, (2, 128)),
+            'attention_mask': torch.ones(2, 128, dtype=torch.long),
+            'tabular': torch.randn(2, 10),
+            'history': torch.randn(2, 5, 128)
         }
         
         with torch.no_grad():
@@ -392,11 +392,11 @@ class TestPerformanceBenchmarks:
         model.eval()
         
         sample_input = {
-            'image': torch.randn(1, 3, 224, 224),
-            'text_embedding': torch.randn(1, 768),
-            'tabular_features': torch.randn(1, 10),
-            'history_sequence': torch.randn(1, 5, 128),
-            'patient_age': torch.tensor([50.0])
+            'vision': torch.randn(1, 3, 224, 224),
+            'input_ids': torch.randint(0, 1000, (1, 128)),
+            'attention_mask': torch.ones(1, 128, dtype=torch.long),
+            'tabular': torch.randn(1, 10),
+            'history': torch.randn(1, 5, 128)
         }
         
         def infer():
@@ -412,11 +412,11 @@ class TestPerformanceBenchmarks:
         model.eval()
         
         sample_input = {
-            'image': torch.randn(32, 3, 224, 224),
-            'text_embedding': torch.randn(32, 768),
-            'tabular_features': torch.randn(32, 10),
-            'history_sequence': torch.randn(32, 5, 128),
-            'patient_age': torch.randn(32)
+            'vision': torch.randn(32, 3, 224, 224),
+            'input_ids': torch.randint(0, 1000, (32, 128)),
+            'attention_mask': torch.ones(32, 128, dtype=torch.long),
+            'tabular': torch.randn(32, 10),
+            'history': torch.randn(32, 5, 128)
         }
         
         def infer():
