@@ -8,6 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.amp import autocast, GradScaler
 from tqdm import tqdm
+import wandb
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,6 +40,26 @@ def train(args):
     # Setup Device
     device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
     print(f"[*] Using device: {device}")
+    
+    # Initialize Weights & Biases
+    try:
+        wandb.login(anonymous='allow')  # Allow anonymous tracking if not logged in
+        wandb.init(
+            project="medsymbol",
+            name=f"medsymbol-run-epochs{args.epochs}",
+            config={
+                "learning_rate": args.lr,
+                "batch_size": args.batch_size,
+                "epochs": args.epochs,
+                "gradient_accumulation_steps": args.gradient_accumulation_steps,
+                "device": str(device)
+            }
+        )
+        use_wandb = True
+        print("[*] Weights & Biases initialized")
+    except Exception as e:
+        print(f"[!] W&B initialization failed ({str(e)}). Continuing without tracking.")
+        use_wandb = False
     
     # Use mixed precision on CUDA for memory efficiency
     use_amp = device.type == 'cuda'
@@ -127,6 +148,14 @@ def train(args):
 
         avg_loss = running_loss / len(train_loader)
         print(f"Epoch {epoch+1} | Average Loss: {avg_loss:.4f}")
+        
+        # Log to Weights & Biases
+        if use_wandb:
+            wandb.log({
+                "epoch": epoch + 1,
+                "avg_loss": avg_loss,
+                "learning_rate": args.lr
+            })
 
         # Clear CUDA cache after epoch
         if device.type == 'cuda':
@@ -135,6 +164,10 @@ def train(args):
         # Save Checkpoint
         os.makedirs("experiments", exist_ok=True)
         torch.save(model.state_dict(), f"experiments/medsymbol_epoch_{epoch+1}.pt")
+    
+    # Finish W&B run
+    if use_wandb:
+        wandb.finish()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train MedSymbol Model")
